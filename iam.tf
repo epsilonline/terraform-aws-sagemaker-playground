@@ -55,9 +55,80 @@ resource "aws_iam_policy" "ec2_execution_policy" {
   })
 }
 
+resource "aws_iam_policy" "app_management" {
+  name   = "SMAppsManagement"
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "SMStudioUserProfileAppPermissionsCreateAndDelete"
+        Effect = "Allow"
+        Action = [
+          "sagemaker:CreateApp",
+          "sagemaker:DeleteApp",
+          "sagemaker:UpdateApp"
+        ]
+        Resource = "arn:aws:sagemaker:${var.aws_region}:${data.aws_caller_identity.current.account_id}:app/*"
+        Condition = {
+          Null = {
+            "sagemaker:OwnerUserProfileArn" = "true"
+          }
+        }
+      },
+      {
+        Sid    = "SMStudioCreatePresignedDomainUrlForUserProfile"
+        Effect = "Allow"
+        Action = ["sagemaker:CreatePresignedDomainUrl"]
+        Resource = "arn:aws:sagemaker:${var.aws_region}:${data.aws_caller_identity.current.account_id}:user-profile/$${sagemaker:DomainId}/$${sagemaker:UserProfileName}"
+      },
+      {
+        Sid    = "SMStudioAppPermissionsTagOnCreate"
+        Effect = "Allow"
+        Action = ["sagemaker:AddTags"]
+        Resource = "arn:aws:sagemaker:${var.aws_region}:${data.aws_caller_identity.current.account_id}:*/*"
+        Condition = {
+          Null = {
+            "sagemaker:TaggingAction" = "false"
+          }
+        }
+      },
+      {
+        Sid    = "SMStudioRestrictCreatePrivateSpaceAppsToOwnerUserProfile"
+        Effect = "Allow"
+        Action = [
+          "sagemaker:CreateApp",
+          "sagemaker:DeleteApp"
+        ]
+        Resource = "arn:aws:sagemaker:${var.aws_region}:${data.aws_caller_identity.current.account_id}:app/$${sagemaker:DomainId}/*"
+        Condition = {
+          ArnLike = {
+            "sagemaker:OwnerUserProfileArn" = "arn:aws:sagemaker:${var.aws_region}:${data.aws_caller_identity.current.account_id}:user-profile/$${sagemaker:DomainId}/$${sagemaker:UserProfileName}"
+          }
+          StringEquals = {
+            "sagemaker:SpaceSharingType" = ["Private"]
+          }
+        }
+      },
+      {
+        Sid    = "AllowAppActionsForSharedSpaces"
+        Effect = "Allow"
+        Action = [
+          "sagemaker:CreateApp",
+          "sagemaker:DeleteApp"
+        ]
+        Resource = "arn:aws:sagemaker:*:*:app/$${sagemaker:DomainId}/*/*/*"
+        Condition = {
+          StringEquals = {
+            "sagemaker:SpaceSharingType" = ["Shared"]
+          }
+        }
+      }
+    ]
+  })
+}
 
 resource "aws_iam_policy" "space_management" {
-  name   = "SMSpaceManagement"
+  name   = "SMSpacesManagement"
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -102,7 +173,7 @@ resource "aws_iam_policy" "space_management" {
 }
 
 resource "aws_iam_policy" "additional_sm_permissions" {
-  name   = "SMMigrationPermissions"
+  name   = "SMAdditionalPermissions"
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -174,7 +245,12 @@ resource "aws_iam_role_policy_attachment" "sagemaker_canvas_ai_services" {
   policy_arn = data.aws_iam_policy.AmazonSageMakerCanvasAIServicesAccess[0].arn
 }
 
-resource "aws_iam_role_policy_attachment" "space_management" {
+resource "aws_iam_role_policy_attachment" "apps_management" {
+  role      = aws_iam_role.sagemaker_domain_execution_role.name
+  policy_arn = aws_iam_policy.app_management.arn
+}
+
+resource "aws_iam_role_policy_attachment" "spaces_management" {
   role      = aws_iam_role.sagemaker_domain_execution_role.name
   policy_arn = aws_iam_policy.space_management.arn
 }
@@ -215,6 +291,11 @@ resource "aws_iam_role" "data_scientist" {
 resource "aws_iam_role_policy_attachment" "data_scientist_role" {
   role       = aws_iam_role.data_scientist.name
   policy_arn = data.aws_iam_policy.data_scientist.arn
+}
+
+resource "aws_iam_role_policy_attachment" "ds_app_management" {
+  role       = aws_iam_role.data_scientist.name
+  policy_arn = aws_iam_policy.app_management.arn
 }
 
 ######################################
