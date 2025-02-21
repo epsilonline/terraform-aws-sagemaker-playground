@@ -5,12 +5,13 @@
 variable "aws_region" {
   type        = string
   description = "AWS Region"
-  default     = ""
+  default     = "eu-west-1"
 }
 
 variable "environment" {
   type = string
   description = "Application environment"
+
 }
 
 variable "application" {
@@ -19,7 +20,7 @@ variable "application" {
 }
 
 ######################################
-# SageMaker Domain
+# SageMaker
 ######################################
 
 variable "domain_name" {
@@ -34,19 +35,13 @@ variable "auth_mode" {
   default     = ""
 }
 
-variable "allowed_instance_types" {
-  type        = list(string)
-  description = "List of EC2 instance types users are allowed launch"
-  default = ["ml.c5.large", "ml.m5.large", "ml.t3.medium", "system"]
-}
-
 variable "instance_type" {
  type = string 
 }
 
 variable "sagemaker_domain_execution_role" {
  type = string
- description = "Execution role for SageMaker Domain" 
+ description = "value" 
 }
 
 variable "app_network_access_type" {
@@ -63,7 +58,6 @@ variable "efs_retention_policy" {
 
 variable "enable_docker" {
   type = string
-  default = "DISABLED"
   description = "Enables Local Mode and Docker Access"
 }
 
@@ -97,6 +91,7 @@ variable "sm_settings" {
       image_arn               = string
       idle_timeout_in_minutes = optional(number)
     }))
+
   }))
 }
 
@@ -114,6 +109,7 @@ variable "shared_spaces" {
       image_arn               = string
       idle_timeout_in_minutes = optional(number)
     }))
+
   }))
 }
 
@@ -158,7 +154,7 @@ variable "azs" {
   type        = list(string)
   description = "Availability Zones"
   default = [ "" ]
-}
+  }
 
 variable "enable_dns_support" {
   type = bool
@@ -188,4 +184,5 @@ description = "Creates only one NGW per AZ"
 variable "enable_vpn_gateway" {
  type = bool
  description = "Enables creation of VPN Gateway"
+
 }
