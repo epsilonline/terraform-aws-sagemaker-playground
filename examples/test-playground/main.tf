@@ -28,6 +28,7 @@ module "sagemaker_playground" {
   #SageMaker Domain
   domain_name             = var.domain_name
   auth_mode               = var.auth_mode
+  allowed_instance_types   = var.allowed_instance_types
   instance_type = var.instance_type
   sagemaker_domain_execution_role = var.sagemaker_domain_execution_role
   app_network_access_type = var.app_network_access_type

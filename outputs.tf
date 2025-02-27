@@ -3,7 +3,7 @@
 ######################################
 
 output "default_execution_role" {
-  value = aws_iam_role.sagemaker_domain_execution_role
+  value = aws_iam_role.sagemaker_domain_execution_role.id
   description = "The execution role used for SageMaker Domain"
 }
 
