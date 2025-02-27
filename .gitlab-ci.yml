@@ -1,26 +1,21 @@
 stages:
   - merge
-  - sync
 
-squash_merge:
+new_version:
   stage: merge
   variables:
-    TERRAFORM_MODULE_VERSION : ${CI_COMMIT_TAG}
+    GIT_STRATEGY: fetch    
+    GIT_DEPTH: 0    
   script:
-    - git checkout release-branch
-    - git merge --squash main
-    - git commit -m "${TERRAFORM_MODULE_VERSION}"
+    - git checkout -b new-release
+    - CURRENT_VERSION=$(cat version.txt)
+    - NEW_VERSION=$(echo $CURRENT_VERSION | awk -F. '{print $1"."$2"."$3+1}')
+    - echo $NEW_VERSION > version.txt
+    - git config --global user.email "${GITLAB_USER_EMAIL}"
+    - git config --global user.name "${GITLAB_USER_LOGIN}"
+    - git add version.txt
+    - git commit -m "New version $NEW_VERSION"
+    - git push origin new-release
 
-sync_to_github:
-  stage: sync
-  image: alpine:latest
-  before_script:
-    - apk add --no-cache git
-  script:
-    - git config --global user.name "GitLab CI/CD"
-    - git config --global user.email "your-email@example.com"
-    - git remote add github https://oauth2:${GITHUB_TOKEN}@github.com/yourusername/your-repo.git
-    - git checkout release-branch 
-    - git push github main
   rules:
-    - if: $CI_COMMIT_TAG
+    - if: $CI_PIPELINE_SOURCE == 'merge_request_event'

@@ -75,6 +75,19 @@ resource "aws_iam_policy" "app_management" {
           }
         }
       },
+  {
+      Sid = "LimitInstanceTypesforNotebooks"
+      Effect = "Deny"
+      Action = [
+        "sagemaker:CreateApp"
+      ]
+      Resource = "*",
+      Condition = {
+        "ForAnyValue:StringNotLike" = {
+            "sagemaker:InstanceType" = var.allowed_instance_types
+          }
+      } 
+  },
       {
         Sid    = "SMStudioCreatePresignedDomainUrlForUserProfile"
         Effect = "Allow"
@@ -97,7 +110,8 @@ resource "aws_iam_policy" "app_management" {
         Effect = "Allow"
         Action = [
           "sagemaker:CreateApp",
-          "sagemaker:DeleteApp"
+          "sagemaker:DeleteApp",
+          "sagemaker:UpdateApp"
         ]
         Resource = "arn:aws:sagemaker:${var.aws_region}:${data.aws_caller_identity.current.account_id}:app/$${sagemaker:DomainId}/*"
         Condition = {
@@ -114,9 +128,10 @@ resource "aws_iam_policy" "app_management" {
         Effect = "Allow"
         Action = [
           "sagemaker:CreateApp",
-          "sagemaker:DeleteApp"
+          "sagemaker:DeleteApp",
+          "sagemaker:UpdateApp"
         ]
-        Resource = "arn:aws:sagemaker:*:*:app/$${sagemaker:DomainId}/*/*/*"
+        Resource = "arn:aws:sagemaker:${var.aws_region}:${data.aws_caller_identity.current.account_id}:app/$${sagemaker:DomainId}/*/*/*"
         Condition = {
           StringEquals = {
             "sagemaker:SpaceSharingType" = ["Shared"]

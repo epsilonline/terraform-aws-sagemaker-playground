@@ -144,6 +144,8 @@ This Terraform module creates and manages AWS SageMaker resources necessary to b
 
 ## 🚀 Usage Example
 
+In examples/test-playground you'll find a basic configuration for the module. By launching it, you'll be able to quickly create a test domain.
+
 ```hcl
 module "sagemaker" {
   source = "epsilonline/sagemaker-playground/aws"
