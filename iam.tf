@@ -8,12 +8,12 @@ data "aws_iam_policy" "AmazonSageMakerFullAccess" {
 
 data "aws_iam_policy" "AmazonSageMakerCanvasFullAccess" {
   count = var.canvas_use ? 1 : 0
-  name = "AmazonSageMakerCanvasFullAccess"
+  name  = "AmazonSageMakerCanvasFullAccess"
 }
 
 data "aws_iam_policy" "AmazonSageMakerCanvasAIServicesAccess" {
   count = var.canvas_use ? 1 : 0
-  name = "AmazonSageMakerCanvasAIServicesAccess"
+  name  = "AmazonSageMakerCanvasAIServicesAccess"
 }
 
 data "aws_iam_policy_document" "sagemaker_domain_assume_role_policy" {
@@ -81,7 +81,7 @@ resource "aws_iam_policy" "app_management" {
       Action = [
         "sagemaker:CreateApp"
       ]
-      Resource = "*",
+      Resource = "*"
       Condition = {
         "ForAnyValue:StringNotLike" = {
             "sagemaker:InstanceType" = var.allowed_instance_types
@@ -93,7 +93,7 @@ resource "aws_iam_policy" "app_management" {
         Effect = "Allow"
         Action = ["sagemaker:CreatePresignedDomainUrl"]
         Resource = "arn:aws:sagemaker:${var.aws_region}:${data.aws_caller_identity.current.account_id}:user-profile/$${sagemaker:DomainId}/$${sagemaker:UserProfileName}"
-      },
+              },
       {
         Sid    = "SMStudioAppPermissionsTagOnCreate"
         Effect = "Allow"
@@ -228,6 +228,21 @@ resource "aws_iam_policy" "additional_sm_permissions" {
   })
 }
 
+resource "aws_iam_policy" "ml_flow_management" {
+  name   = "${var.application}-MLFlowManagement"
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [    
+      {
+        Effect = "Allow"            
+        Action = [
+          "sagemaker-mlflow:*"
+        ]            
+        Resource = "*" 
+      }
+    ]   
+  })
+}
 
 ####################################
 # SageMaker Domain Execution Role
@@ -249,30 +264,35 @@ resource "aws_iam_role_policy_attachment" "sagemaker_full_access" {
 }
 
 resource "aws_iam_role_policy_attachment" "sagemaker_canvas_full_access" {
-  count = var.canvas_use ? 1 : 0
+  count      = var.canvas_use ? 1 : 0
   role       = aws_iam_role.sagemaker_domain_execution_role.name
   policy_arn = data.aws_iam_policy.AmazonSageMakerCanvasFullAccess[0].arn
 }
 
 resource "aws_iam_role_policy_attachment" "sagemaker_canvas_ai_services" {
-  count = var.canvas_use ? 1 : 0
+  count      = var.canvas_use ? 1 : 0
   role       = aws_iam_role.sagemaker_domain_execution_role.name
   policy_arn = data.aws_iam_policy.AmazonSageMakerCanvasAIServicesAccess[0].arn
 }
 
 resource "aws_iam_role_policy_attachment" "apps_management" {
-  role      = aws_iam_role.sagemaker_domain_execution_role.name
+  role       = aws_iam_role.sagemaker_domain_execution_role.name
   policy_arn = aws_iam_policy.app_management.arn
 }
 
 resource "aws_iam_role_policy_attachment" "spaces_management" {
-  role      = aws_iam_role.sagemaker_domain_execution_role.name
+  role       = aws_iam_role.sagemaker_domain_execution_role.name
   policy_arn = aws_iam_policy.space_management.arn
 }
 
 resource "aws_iam_role_policy_attachment" "additional_sm_permissions" {
   role       = aws_iam_role.sagemaker_domain_execution_role.name
   policy_arn = aws_iam_policy.additional_sm_permissions.arn
+}
+
+resource "aws_iam_role_policy_attachment" "mlflow_permissions" {
+  role       = aws_iam_role.sagemaker_domain_execution_role.name
+  policy_arn = aws_iam_policy.mlflow_permissions.arn
 }
 
 ######################################
@@ -313,6 +333,11 @@ resource "aws_iam_role_policy_attachment" "ds_app_management" {
   policy_arn = aws_iam_policy.app_management.arn
 }
 
+resource "aws_iam_role_policy_attachment" "ds_ml_flow_management" {
+  role       = aws_iam_role.data_scientist.name
+  policy_arn = aws_iam_policy.ml_flow_management.arn
+}
+
 ######################################
 # ML Engineer Role
 ######################################
@@ -343,8 +368,84 @@ resource "aws_iam_role" "ml_engineer" {
   }
 
 resource "aws_iam_role_policy_attachment" "ml_engineer_role" {
-  role      = aws_iam_role.ml_engineer.name
+  role       = aws_iam_role.ml_engineer.name
   policy_arn = data.aws_iam_policy.ml_engineer.arn
+}
+
+resource "aws_iam_role_policy_attachment" "ml_flow_management" {
+  role       = aws_iam_role.ml_engineer.name
+  policy_arn = aws_iam_policy.ml_flow_management.arn
+}
+
+######################################
+# MLFlow
+######################################
+
+resource "aws_iam_role" "tracking_server" {
+name = "MLFTrackingServerRole"
+assume_role_policy = jsonencode({
+      Version = "2012-10-17"
+      Statement = [
+        {
+          Action = "sts:AssumeRole"
+          Principal = {
+            Service = "sagemaker.amazonaws.com"
+          }
+          Effect = "Allow"
+        }
+      ]
+  })
+}
+
+resource "aws_iam_policy" "tracking_server_policy" {
+  name   = "MLFTrackingServerPolicy"
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "s3:Get*",
+          "s3:Put*",
+          "s3:List*",
+          "sagemaker:AddTags",
+          "sagemaker:CreateModelPackageGroup",
+          "sagemaker:CreateModelPackage",
+          "sagemaker:UpdateModelPackage",
+          "sagemaker:DescribeModelPackageGroup"
+        ]
+        Resource = "*"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "tracking_server" {
+  role       = aws_iam_role.tracking_server.name
+  policy_arn = aws_iam_policy.tracking_server_policy.arn
+}
+
+resource "aws_iam_policy" "mlflow_permissions" {
+  name   = "MLFlowPermissions"
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "sagemaker-mlflow:*",
+          "sagemaker:CreateMlflowTrackingServer",
+          "sagemaker:ListMlflowTrackingServers",
+          "sagemaker:UpdateMlflowTrackingServer",
+          "sagemaker:DeleteMlflowTrackingServer",
+          "sagemaker:StartMlflowTrackingServer",
+          "sagemaker:StopMlflowTrackingServer",
+          "sagemaker:CreatePresignedMlflowTrackingServerUrl"
+        ]
+        Resource = "*"
+      }
+    ]
+  })
 }
 
 ######################################
@@ -375,7 +476,7 @@ resource "aws_iam_policy" "sagemaker_kms" {
 }
 
 resource "aws_iam_role_policy_attachment" "sagemaker_kms" {
-  count =  var.kms_encryption ? 1 : 0
+  count      =  var.kms_encryption ? 1 : 0
   role       = aws_iam_role.sagemaker_domain_execution_role.name
   policy_arn = aws_iam_policy.sagemaker_kms[0].arn
 }

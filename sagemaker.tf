@@ -9,7 +9,7 @@ resource "aws_sagemaker_domain" "sagemaker_domain" {
   subnet_ids  = [module.vpc.private_subnets[0]]
 
   default_space_settings {
-    execution_role = aws_iam_role.sagemaker_domain_execution_role.arn
+    execution_role  = aws_iam_role.sagemaker_domain_execution_role.arn
     security_groups = [module.vpc.default_security_group_id]
 
   }
@@ -128,18 +128,27 @@ for_each = local.spaces
 }
 
 ######################################
+# MLFlow
+######################################
+resource "aws_sagemaker_mlflow_tracking_server" "playground_server" {
+  count                = var.create_tracking_server ? 1 : 0
+  tracking_server_name = var.tracking_server_name
+  role_arn             = aws_iam_role.tracking_server.arn
+  artifact_store_uri   = var.artifact_store_uri
+}
+
+######################################
 # KMS Key
 ######################################
 
-
 resource "aws_kms_key" "sagemaker_efs_kms_key" {
-  count = var.kms_encryption ? 1 : 0
-  description = "KMS key to encrypt SageMaker EFS volume"
+  count               = var.kms_encryption ? 1 : 0
+  description         = "KMS key to encrypt SageMaker EFS volume"
   enable_key_rotation = true
 }
 
 resource "aws_kms_key_policy" "efs_kms_policy" {
-  count = var.kms_encryption ? 1 : 0
+  count  = var.kms_encryption ? 1 : 0
   key_id = aws_kms_key.sagemaker_efs_kms_key[0].id
   policy = jsonencode({
     Id = ""

@@ -2,23 +2,23 @@ locals {
 }
 
 module "vpc" {
-  source = "terraform-aws-modules/vpc/aws"
-  version = "5.17.0"
+  source                 = "terraform-aws-modules/vpc/aws"
+  version                = "5.17.0"
 
-  name = local.vpc_name
-  cidr = var.cidr_block
-  azs             = [var.azs[0]]
+  name                   = local.vpc_name
+  cidr                   = var.cidr_block
+  azs                    = [var.azs[0]]
 
-  enable_dns_support   = var.enable_dns_support
-  enable_dns_hostnames = var.enable_dns_hostnames
+  enable_dns_support     = var.enable_dns_support
+  enable_dns_hostnames   = var.enable_dns_hostnames
 
-  private_subnets = [var.private_subnet_cidrs[0]]
-  public_subnets  = [var.public_subnet_cidrs[0]]
+  private_subnets        = [var.private_subnet_cidrs[0]]
+  public_subnets         = [var.public_subnet_cidrs[0]]
 
-  enable_nat_gateway = var.enable_nat_gateway
-  single_nat_gateway = var.single_nat_gateway
+  enable_nat_gateway     = var.enable_nat_gateway
+  single_nat_gateway     = var.single_nat_gateway
   one_nat_gateway_per_az = var.one_ngw_per_az
-  enable_vpn_gateway = var.enable_vpn_gateway
+  enable_vpn_gateway     = var.enable_vpn_gateway
 
 
   tags = {

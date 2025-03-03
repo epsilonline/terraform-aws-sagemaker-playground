@@ -22,36 +22,40 @@ module "sagemaker_playground" {
   version = "~>1.0.0"
 
   #Shared Vars
-  aws_region              = var.aws_region
-  application = var.application
-  environment = var.environment
+  aws_region                      = var.aws_region
+  application                     = var.application
+  environment                     = var.environment
   #SageMaker Domain
-  domain_name             = var.domain_name
-  auth_mode               = var.auth_mode
-  allowed_instance_types   = var.allowed_instance_types
+  domain_name                     = var.domain_name
+  auth_mode                       = var.auth_mode
+  allowed_instance_types          = var.allowed_instance_types
   instance_type = var.instance_type
   sagemaker_domain_execution_role = var.sagemaker_domain_execution_role
-  app_network_access_type = var.app_network_access_type
-  efs_retention_policy    = var.efs_retention_policy
-  enable_docker = var.enable_docker
-  canvas_use = var.canvas_use
-  jupyter_image_tag = var.jupyter_image_tag
-  sagemaker_image_arn_prefix = var.sagemaker_image_arn_prefix
+  app_network_access_type         = var.app_network_access_type
+  efs_retention_policy            = var.efs_retention_policy
+  enable_docker                   = var.enable_docker
+  canvas_use                      = var.canvas_use
+  jupyter_image_tag               = var.jupyter_image_tag
+  sagemaker_image_arn_prefix      = var.sagemaker_image_arn_prefix
   #SageMaker Profiles and Spaces
-  sm_settings = var.sm_settings
-  shared_spaces = var.shared_spaces
+  sm_settings                     = var.sm_settings
+  shared_spaces                   = var.shared_spaces
+  #MLFlow
+  create_tracking_server          = var.create_tracking_server
+  tracking_server_name            = var.create_tracking_server
+  artifact_store_uri              = var.artifact_store_uri
   #KMS
-  kms_encryption          = var.kms_encryption
-  kms_arn                 = var.kms_arn
+  kms_encryption                  = var.kms_encryption
+  kms_arn                         = var.kms_arn
   #VPC
-  cidr_block              = var.cidr_block
-  private_subnet_cidrs    = var.private_subnet_cidrs
-  public_subnet_cidrs     = var.public_subnet_cidrs
-  azs                     = var.azs
-  enable_dns_support   = var.enable_dns_support
-  enable_dns_hostnames = var.enable_dns_hostnames
-  enable_nat_gateway = var.enable_nat_gateway
-  single_nat_gateway = var.single_nat_gateway
-  one_ngw_per_az        = var.one_ngw_per_az
-  enable_vpn_gateway = var.enable_vpn_gateway
+  cidr_block                      = var.cidr_block
+  private_subnet_cidrs            = var.private_subnet_cidrs
+  public_subnet_cidrs             = var.public_subnet_cidrs
+  azs                             = var.azs
+  enable_dns_support              = var.enable_dns_support
+  enable_dns_hostnames            = var.enable_dns_hostnames
+  enable_nat_gateway              = var.enable_nat_gateway
+  single_nat_gateway              = var.single_nat_gateway
+  one_ngw_per_az                  = var.one_ngw_per_az
+  enable_vpn_gateway              = var.enable_vpn_gateway
 }

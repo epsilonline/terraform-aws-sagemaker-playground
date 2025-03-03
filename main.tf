@@ -61,5 +61,5 @@ locals {
 
 ### User Profile Roles ###
   data_scientists = {for user_key, user in var.sm_settings : user_key => user if user.role == "DataScientist"} 
-  ml_engineer = {for user_key, user in var.sm_settings : user_key => user if user.role == "MLEngineer"} 
+  ml_engineer     = {for user_key, user in var.sm_settings : user_key => user if user.role == "MLEngineer"} 
 }

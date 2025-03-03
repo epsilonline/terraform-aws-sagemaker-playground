@@ -35,6 +35,12 @@ variable "auth_mode" {
   default     = ""
 }
 
+variable "allowed_instance_types" {
+  type        = list(string)
+  description = "List of EC2 instance types users are allowed launch"
+  default = ["ml.c5.large", "ml.m5.large", "ml.t3.medium", "system"]
+}
+
 variable "instance_type" {
  type = string 
 }
@@ -111,6 +117,22 @@ variable "shared_spaces" {
     }))
 
   }))
+}
+
+######################################
+# MLFlow
+######################################
+variable "create_tracking_server" {
+  type        = bool
+  description = "Enables the creation of a Tracking Server in SageMaker Experiments"
+}
+variable "tracking_server_name" {
+  type        = string
+  description = "Name of the Tracking Server in SageMaker Experiments"
+}
+variable "artifact_store_uri" {
+  type        = string
+  description = "Uri of S3 bucket to store artifacts"
 }
 
 ######################################

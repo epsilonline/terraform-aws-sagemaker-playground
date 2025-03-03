@@ -9,12 +9,12 @@ variable "aws_region" {
 }
 
 variable "environment" {
-  type = string
+  type        = string
   description = "Application environment"
 }
 
 variable "application" {
-  type = string
+  type        = string
   description = "Application name"
 }
 
@@ -41,11 +41,11 @@ variable "allowed_instance_types" {
 }
 
 variable "instance_type" {
- type = string 
+ type         = string 
 }
 
 variable "sagemaker_domain_execution_role" {
- type = string
+ type        = string
  description = "Execution role for SageMaker Domain" 
 }
 
@@ -62,23 +62,23 @@ variable "efs_retention_policy" {
 }
 
 variable "enable_docker" {
-  type = string
-  default = "DISABLED"
+  type        = string
+  default     = "DISABLED"
   description = "Enables Local Mode and Docker Access"
 }
 
 variable "canvas_use" {
-  type = bool
+  type        = bool
   description = "Enables the creation of resources for SageMaker Canvas"
 }
 
 variable "jupyter_image_tag" {
-  type = string
+  type        = string
   description = "Jupyter Image Tag"
 }
 
 variable "sagemaker_image_arn_prefix" {  
-  type = string
+  type        = string
   description = "SageMaker Image Arn prefix"
 }
 
@@ -118,11 +118,28 @@ variable "shared_spaces" {
 }
 
 ######################################
+# MLFlow
+######################################
+
+variable "create_tracking_server" {
+  type        = bool
+  description = "Enables the creation of a Tracking Server in SageMaker Experiments"
+}
+variable "tracking_server_name" {
+  type        = string
+  description = "Name of the Tracking Server in SageMaker Experiments"
+}
+variable "artifact_store_uri" {
+  type        = string
+  description = "Uri of S3 bucket to store Artifacts"
+}
+
+######################################
 # KMS
 ######################################
 
 variable "kms_encryption" {
-  type = bool
+  type        = bool
   description = "Enables the creation of encryption resources"
 }
 
@@ -130,7 +147,7 @@ variable "kms_encryption" {
 variable "kms_arn" {
   type        = string
   description = "KMS key EFS encryption"
-  default = ""
+  default     = ""
 }
 
 ######################################
@@ -140,13 +157,13 @@ variable "kms_arn" {
 variable "cidr_block" {
   type        = string
   description = "CIDR block for SageMaker VPC"
-  default = ""
+  default     = ""
 }
 
 variable "private_subnet_cidrs" {
   type        = list(string)
   description = "Private Subnet CIDR values"
-  default = [ "" ]
+  default     = [ "" ]
 }
 
 variable "public_subnet_cidrs" {
@@ -157,35 +174,35 @@ variable "public_subnet_cidrs" {
 variable "azs" {
   type        = list(string)
   description = "Availability Zones"
-  default = [ "" ]
+  default     = [ "" ]
 }
 
 variable "enable_dns_support" {
-  type = bool
+  type        = bool
   description = "Enables DNS Support"
 }
 
 variable "enable_dns_hostnames" {
-  type = bool
+  type        = bool
   description = "Enables DNS Hostnames"
 }
 
 variable "enable_nat_gateway" {
- type = bool
+ type        = bool
  description = "Enables creation of Nat Gateway"
 }
 
 variable "single_nat_gateway" {
-type = bool
+type        = bool
 description = "Creates a single one NGW"
 }
 
 variable "one_ngw_per_az" {
-type = bool
+type        = bool
 description = "Creates only one NGW per AZ"
 }
 
 variable "enable_vpn_gateway" {
- type = bool
+ type        = bool
  description = "Enables creation of VPN Gateway"
 }
