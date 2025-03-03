@@ -93,7 +93,12 @@ resource "aws_iam_policy" "app_management" {
         Effect = "Allow"
         Action = ["sagemaker:CreatePresignedDomainUrl"]
         Resource = "arn:aws:sagemaker:${var.aws_region}:${data.aws_caller_identity.current.account_id}:user-profile/$${sagemaker:DomainId}/$${sagemaker:UserProfileName}"
-              },
+        Condition = {
+          StringEquals = {
+              "sagemaker:ResourceTag/studiouserid" = "$${aws:PrincipalTag/studiouserid}"
+           }
+        }           
+      },
       {
         Sid    = "SMStudioAppPermissionsTagOnCreate"
         Effect = "Allow"
