@@ -1,21 +1,13 @@
 stages:
-  - merge
+  - release
 
-new_version:
-  stage: merge
-  variables:
-    GIT_STRATEGY: fetch    
-    GIT_DEPTH: 0    
-  script:
-    - git checkout -b new-release
-    - CURRENT_VERSION=$(cat version.txt)
-    - NEW_VERSION=$(echo $CURRENT_VERSION | awk -F. '{print $1"."$2"."$3+1}')
-    - echo $NEW_VERSION > version.txt
-    - git config --global user.email "${GITLAB_USER_EMAIL}"
-    - git config --global user.name "${GITLAB_USER_LOGIN}"
-    - git add version.txt
-    - git commit -m "New version $NEW_VERSION"
-    - git push origin new-release
-
+release_job:
+  stage: release
+  image: registry.gitlab.com/gitlab-org/release-cli:latest
   rules:
-    - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
+    - if: $CI_COMMIT_TAG                 # Run this job when a tag is created
+  script:
+    - echo "running release_job"
+  release:                               # See https://docs.gitlab.com/ee/ci/yaml/#release for available properties
+    tag_name: '$CI_COMMIT_TAG'
+    description: '$CI_COMMIT_TAG'

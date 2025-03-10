@@ -75,29 +75,18 @@ resource "aws_iam_policy" "app_management" {
           }
         }
       },
-  {
-      Sid = "LimitInstanceTypesforNotebooks"
-      Effect = "Deny"
-      Action = [
+      {
+        Sid = "LimitInstanceTypesforNotebooks"
+        Effect = "Deny"
+        Action = [
         "sagemaker:CreateApp"
-      ]
-      Resource = "*"
-      Condition = {
+        ]
+        Resource = "*"
+        Condition = {
         "ForAnyValue:StringNotLike" = {
-            "sagemaker:InstanceType" = var.allowed_instance_types
+            "sagemaker:InstanceType" = ["${var.allowed_instance_types}"]
           }
       } 
-  },
-      {
-        Sid    = "SMStudioCreatePresignedDomainUrlForUserProfile"
-        Effect = "Allow"
-        Action = ["sagemaker:CreatePresignedDomainUrl"]
-        Resource = "arn:aws:sagemaker:${var.aws_region}:${data.aws_caller_identity.current.account_id}:user-profile/$${sagemaker:DomainId}/$${sagemaker:UserProfileName}"
-        Condition = {
-          StringEquals = {
-              "sagemaker:ResourceTag/studiouserid" = "$${aws:PrincipalTag/studiouserid}"
-           }
-        }           
       },
       {
         Sid    = "SMStudioAppPermissionsTagOnCreate"
@@ -249,6 +238,29 @@ resource "aws_iam_policy" "ml_flow_management" {
   })
 }
 
+resource "aws_iam_policy" "presigned_url" {
+  name   = "${var.application}-PresignedURLLimitation"
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [   
+      {
+        Sid    = "SMStudioCreatePresignedDomainUrlForUserProfile"
+        Effect = "Allow"
+        Action = ["sagemaker:CreatePresignedDomainUrl"]
+        Resource = "arn:aws:sagemaker:${var.aws_region}:${data.aws_caller_identity.current.account_id}:domain/*"
+        Condition = {
+          StringLikeIfExists = {
+              "sagemaker:ResourceTag/studiouserid" = [
+              "$${aws:PrincipalTag/SourceIdentity}",
+              "$${aws:PrincipalTag/studiouserid}"
+              ]
+          }
+        }           
+      }
+    ]
+  })
+}
+
 ####################################
 # SageMaker Domain Execution Role
 ####################################
@@ -316,15 +328,15 @@ resource "aws_iam_role" "data_scientist" {
       {
         Action    = "sts:AssumeRole"
         Principal = {
-          Service = "sagemaker.amazonaws.com"
-        }
+           Service = "sagemaker.amazonaws.com"
+          }
         Effect    = "Allow"
       }
     ]
-    })
+  })
 
-    tags = {
-      "Role" = "DataScientist"
+  tags = {
+    "Role" = "DataScientist"
   }
 }
 
@@ -343,6 +355,11 @@ resource "aws_iam_role_policy_attachment" "ds_ml_flow_management" {
   policy_arn = aws_iam_policy.ml_flow_management.arn
 }
 
+resource "aws_iam_role_policy_attachment" "ds_presigned" {
+  role       = aws_iam_role.data_scientist.name
+  policy_arn = aws_iam_policy.presigned_url.arn
+}
+
 ######################################
 # ML Engineer Role
 ######################################
@@ -355,22 +372,22 @@ resource "aws_iam_role" "ml_engineer" {
   name  = "${var.application}-MLEngineer"
 
   assume_role_policy = jsonencode({
-      Version = "2012-10-17"
-      Statement = [
-        {
+    Version = "2012-10-17"
+    Statement = [
+      {
           Action    = "sts:AssumeRole"
           Principal = {
-            Service = "sagemaker.amazonaws.com"
+           Service = "sagemaker.amazonaws.com"
           }
-          Effect    = "Allow"
-        }
-      ]
-    })
+        Effect    = "Allow"
+      }
+    ]
+  })
 
-    tags = {
-      "Role" = "MLEngineer"
-    }
+  tags = {
+     "Role" = "MLEngineer"
   }
+}
 
 resource "aws_iam_role_policy_attachment" "ml_engineer_role" {
   role       = aws_iam_role.ml_engineer.name

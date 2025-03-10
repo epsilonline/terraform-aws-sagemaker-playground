@@ -58,6 +58,10 @@ resource "aws_sagemaker_user_profile" "data_scientist" {
     execution_role  = aws_iam_role.data_scientist.arn
     security_groups = [module.vpc.default_security_group_id]
   }
+
+  tags = {
+   studiouserid = each.key 
+  }
 }
 
 resource "aws_sagemaker_user_profile" "ml_engineer" {
@@ -68,6 +72,10 @@ resource "aws_sagemaker_user_profile" "ml_engineer" {
   user_settings {
     execution_role  = aws_iam_role.ml_engineer.arn
     security_groups = [module.vpc.default_security_group_id]
+  }
+
+  tags = {
+    studiouserid = each.key 
   }
 }
 
