@@ -5,7 +5,7 @@
 variable "aws_region" {
   type        = string
   description = "AWS Region"
-  default     = ""
+  default     = "eu-west-1"
 }
 
 variable "environment" {
@@ -25,28 +25,28 @@ variable "application" {
 variable "domain_name" {
   type        = string
   description = "Sagemaker Domain Name"
-  default     = ""
 }
 
 variable "auth_mode" {
   type        = string
   description = "Authentication mode to access the domain"
-  default     = ""
+  default     = "IAM"
 }
 
 variable "allowed_instance_types" {
   type        = list(string)
   description = "List of EC2 instance types users are allowed launch"
-  default = ["ml.c5.large", "ml.m5.large", "ml.t3.medium", "system"]
+  default     = ["ml.c5.large", "ml.m5.large", "ml.t3.medium", "system"]
 }
 
 variable "instance_type" {
- type         = string 
+ type        = string
+ description = "Instance type in SageMaker" 
 }
 
 variable "sagemaker_domain_execution_role" {
  type        = string
- description = "Execution role for SageMaker Domain" 
+ description = "Name of the Execution Role" 
 }
 
 variable "app_network_access_type" {

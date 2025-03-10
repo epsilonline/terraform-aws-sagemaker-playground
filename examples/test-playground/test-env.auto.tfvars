@@ -17,7 +17,7 @@ domain_name = "TestPlayGround"
 
 auth_mode = "IAM"
 
-allowed_instance_types = [""]
+allowed_instance_types = ["ml.c5.large", "ml.m5.large", "ml.t3.medium", "system"]
 
 instance_type = "system"
 
