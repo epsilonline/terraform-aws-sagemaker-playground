@@ -221,4 +221,4 @@ module "sagemaker" {
 
 ## 📜 License
 
-This project is licensed under the [**GPL-3 License**](#[shared-vars](https://www.gnu.org/licenses/gpl-3.0.html#license-text)).
+This project is licensed under the [**LGPL-3 License**](https://www.gnu.org/licenses/lgpl-3.0.html#license-text).
