@@ -57,7 +57,6 @@ This Terraform module creates and manages AWS SageMaker resources necessary to b
 |----------------------------|---------------------------------------------------|---------------|
 | `domain_name`              | SageMaker Domain Name                             | `string`      |
 | `auth_mode`                | Authentication mode                               | `string`      |
-| `allowed_instance_types`   | List of allowed EC2 instance types               | `list(string)` |
 | `instance_type`            | Instance type for SageMaker Domain               | `string`      |
 | `sagemaker_domain_execution_role` | Execution role for SageMaker Domain  | `string`      |
 | `app_network_access_type`  | VPC used for non-EFS traffic                     | `string`      |
@@ -88,18 +87,23 @@ This Terraform module creates and manages AWS SageMaker resources necessary to b
 
 ### 🔹 VPC
 
-| Name                    | Description                                 | Type          |
-|-------------------------|---------------------------------------------|--------------|
-| `cidr_block`            | CIDR block for SageMaker VPC               | `string`     |
-| `private_subnet_cidrs`  | Private Subnet CIDR values                 | `list(string)` |
-| `public_subnet_cidrs`   | Public Subnet CIDR values                  | `list(string)` |
-| `azs`                   | Availability Zones                          | `list(string)` |
-| `enable_dns_support`    | Enables DNS Support                        | `bool`       |
-| `enable_dns_hostnames`  | Enables DNS Hostnames                      | `bool`       |
-| `enable_nat_gateway`    | Enables NAT Gateway                        | `bool`       |
-| `single_nat_gateway`    | Creates a single NGW                       | `bool`       |
-| `one_ngw_per_az`        | Creates one NGW per AZ                     | `bool`       |
-| `enable_vpn_gateway`    | Enables VPN Gateway                        | `bool`       |
+| Name                           | Description                                                | Type          | Default |
+|--------------------------------|------------------------------------------------------------|---------------|---------|
+| `use_existing_vpc`             | Set to true to use an existing VPC                         | `bool`        | `false` |
+| `existing_vpc_id`              | ID of existing VPC (required if use_existing_vpc is true)  | `string`      | `""`    |
+| `existing_private_subnet_ids`  | List of existing private subnet IDs (recommended)          | `list(string)`| `[]`    |
+| `existing_security_group_id`   | ID of existing security group (optional)                   | `string`      | `""`    |
+| `create_security_group_rules`  | Create security group rules (set false if pre-configured)  | `bool`        | `true`  |
+| `cidr_block`                   | CIDR block for new VPC                                     | `string`      | `""`    |
+| `private_subnet_cidrs`         | Private Subnet CIDR values for new VPC                     | `list(string)`| `[]`    |
+| `public_subnet_cidrs`          | Public Subnet CIDR values for new VPC                      | `list(string)`| `[]`    |
+| `azs`                          | Availability Zones for new VPC                             | `list(string)`| `[]`    |
+| `enable_dns_support`           | Enables DNS Support for new VPC                            | `bool`        | `true`  |
+| `enable_dns_hostnames`         | Enables DNS Hostnames for new VPC                          | `bool`        | `true`  |
+| `enable_nat_gateway`           | Enables NAT Gateway for new VPC                            | `bool`        | `true`  |
+| `single_nat_gateway`           | Creates a single NGW for new VPC                           | `bool`        | `true`  |
+| `one_ngw_per_az`               | Creates one NGW per AZ for new VPC                         | `bool`        | `false` |
+| `enable_vpn_gateway`           | Enables VPN Gateway for new VPC                            | `bool`        | `false` |
 
 ---
 
@@ -142,7 +146,9 @@ This Terraform module creates and manages AWS SageMaker resources necessary to b
 
 ---
 
-## 🚀 Usage Example
+## 🚀 Usage Examples
+
+### Using a New VPC (Default)
 
 ```hcl
 module "sagemaker" {
@@ -216,6 +222,84 @@ module "sagemaker" {
   enable_vpn_gateway = false
 }
 ```
+
+### Using an Existing VPC
+
+```hcl
+module "sagemaker" {
+  source = "epsilonline/sagemaker-playground/aws"
+  version = "~>1.0.0"
+
+  #Shared Vars
+  aws_region = "eu-west-1"
+  environment = "dev"
+  application = "TestSMPlayGround"
+  
+  #SageMaker Domain
+  domain_name = "TestPlayGround"
+  auth_mode = "IAM"
+  instance_type = "system"
+  sagemaker_domain_execution_role = "TestSMDomainExecutionRole"
+  app_network_access_type = "VpcOnly"
+  efs_retention_policy = "Retain"
+  enable_docker = "ENABLED"
+  canvas_use = true
+  jupyter_image_tag = "jupyter-server-3"
+  sagemaker_image_arn_prefix = "arn:aws:sagemaker:eu-west-1:470317259841:image"
+  
+  #SageMaker Profiles and Spaces
+  sm_settings = {
+      "TestUser" = {
+        role = "DataScientist"
+        spaces = {
+          "CodeEditor" = {
+              app_type                = "CodeEditor"
+              app_name                = "default"
+              instance_type           = "ml.c5.xlarge"
+              image_arn               = "arn:aws:sagemaker:eu-west-1:819792524951:image/sagemaker-distribution-gpu"
+              idle_timeout_in_minutes = null
+          }              
+        }
+      }
+  }
+  
+  shared_spaces = {}
+  
+  #KMS
+  kms_encryption = false
+  kms_arn = ""
+  
+  #Use Existing VPC
+  use_existing_vpc = true
+  existing_vpc_id = "vpc-0123456789abcdef0"
+  existing_private_subnet_ids = ["subnet-0123456789abcdef0", "subnet-0123456789abcdef1"]
+  existing_security_group_id = "sg-0123456789abcdef0"  # Optional - will create one if not provided
+}
+```
+
+**Notes for Using an Existing VPC:**
+
+1. **Required Variables:**
+   - Set `use_existing_vpc = true`
+   - Provide your `existing_vpc_id` (validated - will fail if missing)
+   - Provide `existing_private_subnet_ids` (recommended) or ensure subnets are discoverable
+
+2. **Optional Variables:**
+   - `existing_security_group_id` - If not provided, a new security group will be created
+   - `create_security_group_rules` - Set to `false` if your existing security group already has the required rules configured
+
+3. **Security Requirements:**
+   - Your VPC must have DNS support and DNS hostnames enabled
+   - Private subnets must have internet access (via NAT Gateway) or use VPC endpoints
+   - Security group must allow:
+     - Egress: All traffic to 0.0.0.0/0
+     - Ingress: TCP 8192-65535 from VPC CIDR (for Jupyter)
+     - Ingress: TCP 22 from VPC CIDR (for Git)
+
+4. **Best Practices:**
+   - Use multiple private subnets across different AZs for high availability
+   - Ensure subnets have adequate IP address space for SageMaker resources
+   - The VPC-related variables for new VPC creation (like `cidr_block`, `azs`, etc.) will be ignored
 
 ---
 

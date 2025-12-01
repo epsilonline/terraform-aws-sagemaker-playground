@@ -9,12 +9,12 @@ variable "aws_region" {
 }
 
 variable "environment" {
-  type = string
+  type        = string
   description = "Application environment"
 }
 
 variable "application" {
-  type = string
+  type        = string
   description = "Application name"
 }
 
@@ -34,19 +34,13 @@ variable "auth_mode" {
   default     = ""
 }
 
-variable "allowed_instance_types" {
-  type        = list(string)
-  description = "List of EC2 instance types users are allowed launch"
-  default = ["ml.c5.large", "ml.m5.large", "ml.t3.medium", "system"]
-}
-
 variable "instance_type" {
- type = string 
+  type = string
 }
 
 variable "sagemaker_domain_execution_role" {
- type = string
- description = "Execution role for SageMaker Domain" 
+  type        = string
+  description = "Execution role for SageMaker Domain"
 }
 
 variable "app_network_access_type" {
@@ -62,23 +56,23 @@ variable "efs_retention_policy" {
 }
 
 variable "enable_docker" {
-  type = string
-  default = "DISABLED"
+  type        = string
+  default     = "DISABLED"
   description = "Enables Local Mode and Docker Access"
 }
 
 variable "canvas_use" {
-  type = bool
+  type        = bool
   description = "Enables the creation of resources for SageMaker Canvas"
 }
 
 variable "jupyter_image_tag" {
-  type = string
+  type        = string
   description = "Jupyter Image Tag"
 }
 
-variable "sagemaker_image_arn_prefix" {  
-  type = string
+variable "sagemaker_image_arn_prefix" {
+  type        = string
   description = "SageMaker Image Arn prefix"
 }
 
@@ -122,7 +116,7 @@ variable "shared_spaces" {
 ######################################
 
 variable "kms_encryption" {
-  type = bool
+  type        = bool
   description = "Enables the creation of encryption resources"
 }
 
@@ -130,62 +124,99 @@ variable "kms_encryption" {
 variable "kms_arn" {
   type        = string
   description = "KMS key EFS encryption"
-  default = ""
+  default     = ""
 }
 
 ######################################
 # VPC
 ######################################
 
+variable "use_existing_vpc" {
+  type        = bool
+  description = "Set to true to use an existing VPC instead of creating a new one"
+  default     = false
+}
+
+variable "existing_vpc_id" {
+  type        = string
+  description = "ID of existing VPC to use (required if use_existing_vpc is true)"
+  default     = ""
+}
+
+variable "existing_private_subnet_ids" {
+  type        = list(string)
+  description = "List of existing private subnet IDs to use (at least one required if use_existing_vpc is true and subnets not auto-discovered)"
+  default     = []
+}
+
+variable "existing_security_group_id" {
+  type        = string
+  description = "ID of existing security group to use (optional, will create one if not provided)"
+  default     = ""
+}
+
+variable "create_security_group_rules" {
+  type        = bool
+  description = "Set to false if using an existing security group with pre-configured rules"
+  default     = true
+}
+
 variable "cidr_block" {
   type        = string
-  description = "CIDR block for SageMaker VPC"
-  default = ""
+  description = "CIDR block for SageMaker VPC (only used when creating new VPC)"
+  default     = ""
 }
 
 variable "private_subnet_cidrs" {
   type        = list(string)
-  description = "Private Subnet CIDR values"
-  default = [ "" ]
+  description = "Private Subnet CIDR values (only used when creating new VPC)"
+  default     = []
 }
 
 variable "public_subnet_cidrs" {
   type        = list(string)
-  description = "Public Subnet CIDR values"
+  description = "Public Subnet CIDR values (only used when creating new VPC)"
+  default     = []
 }
 
 variable "azs" {
   type        = list(string)
-  description = "Availability Zones"
-  default = [ "" ]
+  description = "Availability Zones (only used when creating new VPC). If empty, will use first available AZ from data source"
+  default     = []
 }
 
 variable "enable_dns_support" {
-  type = bool
-  description = "Enables DNS Support"
+  type        = bool
+  description = "Enables DNS Support (only used when creating new VPC)"
+  default     = true
 }
 
 variable "enable_dns_hostnames" {
-  type = bool
-  description = "Enables DNS Hostnames"
+  type        = bool
+  description = "Enables DNS Hostnames (only used when creating new VPC)"
+  default     = true
 }
 
 variable "enable_nat_gateway" {
- type = bool
- description = "Enables creation of Nat Gateway"
+  type        = bool
+  description = "Enables creation of Nat Gateway (only used when creating new VPC)"
+  default     = true
 }
 
 variable "single_nat_gateway" {
-type = bool
-description = "Creates a single one NGW"
+  type        = bool
+  description = "Creates a single one NGW (only used when creating new VPC)"
+  default     = true
 }
 
 variable "one_ngw_per_az" {
-type = bool
-description = "Creates only one NGW per AZ"
+  type        = bool
+  description = "Creates only one NGW per AZ (only used when creating new VPC)"
+  default     = false
 }
 
 variable "enable_vpn_gateway" {
- type = bool
- description = "Enables creation of VPN Gateway"
+  type        = bool
+  description = "Enables creation of VPN Gateway (only used when creating new VPC)"
+  default     = false
 }

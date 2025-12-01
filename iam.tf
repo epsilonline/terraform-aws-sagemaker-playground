@@ -1,40 +1,15 @@
 ######################################
-# SageMaker Domain Policies
+# IAM Policies and Roles
 ######################################
 
-data "aws_iam_policy" "AmazonSageMakerFullAccess" {
-  name = "AmazonSageMakerFullAccess"
-}
-
-data "aws_iam_policy" "AmazonSageMakerCanvasFullAccess" {
-  count = var.canvas_use ? 1 : 0
-  name = "AmazonSageMakerCanvasFullAccess"
-}
-
-data "aws_iam_policy" "AmazonSageMakerCanvasAIServicesAccess" {
-  count = var.canvas_use ? 1 : 0
-  name = "AmazonSageMakerCanvasAIServicesAccess"
-}
-
-data "aws_iam_policy_document" "sagemaker_domain_assume_role_policy" {
-  statement {
-    actions = ["sts:AssumeRole"]
-
-    principals {
-      type        = "Service"
-      identifiers = ["sagemaker.amazonaws.com", "forecast.amazonaws.com"]
-    }
-  }
-}
-
 resource "aws_iam_policy" "ec2_execution_policy" {
-  name   = "SMAdditionalExecutionPolicy"
+  name = "SMAdditionalExecutionPolicy"
   policy = jsonencode({
-    Version   = "2012-10-17"
+    Version = "2012-10-17"
     Statement = [
       {
-        Sid       = "AllowEC2Actions"
-        Action    = [
+        Sid = "AllowEC2Actions"
+        Action = [
           "ec2:CreateSecurityGroup",
           "ec2:CreateTags",
           "ec2:DescribeNetworkInterfaceAttribute",
@@ -48,15 +23,15 @@ resource "aws_iam_policy" "ec2_execution_policy" {
           "ec2:RevokeSecurityGroupEgress",
           "ec2:AuthorizeSecurityGroupEgress"
         ]
-        Effect    = "Allow"
-        Resource  = "*"
+        Effect   = "Allow"
+        Resource = "*"
       }
     ]
   })
 }
 
 resource "aws_iam_policy" "app_management" {
-  name   = "SMAppsManagement"
+  name = "SMAppsManagement"
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -68,7 +43,7 @@ resource "aws_iam_policy" "app_management" {
           "sagemaker:DeleteApp",
           "sagemaker:UpdateApp"
         ]
-        Resource = "arn:aws:sagemaker:${var.aws_region}:${data.aws_caller_identity.current.account_id}:app/*"
+        Resource = "arn:aws:sagemaker:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:app/*"
         Condition = {
           Null = {
             "sagemaker:OwnerUserProfileArn" = "true"
@@ -76,16 +51,16 @@ resource "aws_iam_policy" "app_management" {
         }
       },
       {
-        Sid    = "SMStudioCreatePresignedDomainUrlForUserProfile"
-        Effect = "Allow"
-        Action = ["sagemaker:CreatePresignedDomainUrl"]
-        Resource = "arn:aws:sagemaker:${var.aws_region}:${data.aws_caller_identity.current.account_id}:user-profile/$${sagemaker:DomainId}/$${sagemaker:UserProfileName}"
+        Sid      = "SMStudioCreatePresignedDomainUrlForUserProfile"
+        Effect   = "Allow"
+        Action   = ["sagemaker:CreatePresignedDomainUrl"]
+        Resource = "arn:aws:sagemaker:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:user-profile/$${sagemaker:DomainId}/$${sagemaker:UserProfileName}"
       },
       {
-        Sid    = "SMStudioAppPermissionsTagOnCreate"
-        Effect = "Allow"
-        Action = ["sagemaker:AddTags"]
-        Resource = "arn:aws:sagemaker:${var.aws_region}:${data.aws_caller_identity.current.account_id}:*/*"
+        Sid      = "SMStudioAppPermissionsTagOnCreate"
+        Effect   = "Allow"
+        Action   = ["sagemaker:AddTags"]
+        Resource = "arn:aws:sagemaker:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:*/*"
         Condition = {
           Null = {
             "sagemaker:TaggingAction" = "false"
@@ -99,10 +74,10 @@ resource "aws_iam_policy" "app_management" {
           "sagemaker:CreateApp",
           "sagemaker:DeleteApp"
         ]
-        Resource = "arn:aws:sagemaker:${var.aws_region}:${data.aws_caller_identity.current.account_id}:app/$${sagemaker:DomainId}/*"
+        Resource = "arn:aws:sagemaker:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:app/$${sagemaker:DomainId}/*"
         Condition = {
           ArnLike = {
-            "sagemaker:OwnerUserProfileArn" = "arn:aws:sagemaker:${var.aws_region}:${data.aws_caller_identity.current.account_id}:user-profile/$${sagemaker:DomainId}/$${sagemaker:UserProfileName}"
+            "sagemaker:OwnerUserProfileArn" = "arn:aws:sagemaker:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:user-profile/$${sagemaker:DomainId}/$${sagemaker:UserProfileName}"
           }
           StringEquals = {
             "sagemaker:SpaceSharingType" = ["Private"]
@@ -128,7 +103,7 @@ resource "aws_iam_policy" "app_management" {
 }
 
 resource "aws_iam_policy" "space_management" {
-  name   = "SMSpacesManagement"
+  name = "SMSpacesManagement"
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -140,7 +115,7 @@ resource "aws_iam_policy" "space_management" {
           "sagemaker:UpdateSpace",
           "sagemaker:DeleteSpace"
         ]
-        Resource = "arn:aws:sagemaker:${var.aws_region}:${data.aws_caller_identity.current.account_id}:space/$${sagemaker:DomainId}/*"
+        Resource = "arn:aws:sagemaker:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:space/$${sagemaker:DomainId}/*"
         Condition = {
           Null = {
             "sagemaker:OwnerUserProfileArn" = "true"
@@ -155,10 +130,10 @@ resource "aws_iam_policy" "space_management" {
           "sagemaker:UpdateSpace",
           "sagemaker:DeleteSpace"
         ]
-        Resource = "arn:aws:sagemaker:${var.aws_region}:${data.aws_caller_identity.current.account_id}:space/$${sagemaker:DomainId}/*"
+        Resource = "arn:aws:sagemaker:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:space/$${sagemaker:DomainId}/*"
         Condition = {
           ArnLike = {
-            "sagemaker:OwnerUserProfileArn" = "arn:aws:sagemaker:${var.aws_region}:${data.aws_caller_identity.current.account_id}:user-profile/$${sagemaker:DomainId}/$${sagemaker:UserProfileName}"
+            "sagemaker:OwnerUserProfileArn" = "arn:aws:sagemaker:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:user-profile/$${sagemaker:DomainId}/$${sagemaker:UserProfileName}"
           }
           StringEquals = {
             "sagemaker:SpaceSharingType" = [
@@ -173,7 +148,7 @@ resource "aws_iam_policy" "space_management" {
 }
 
 resource "aws_iam_policy" "additional_sm_permissions" {
-  name   = "SMAdditionalPermissions"
+  name = "SMAdditionalPermissions"
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -187,7 +162,7 @@ resource "aws_iam_policy" "additional_sm_permissions" {
           "sagemaker:DeleteUserProfile",
           "sagemaker:DeleteDomain"
         ]
-        Resource = "arn:aws:sagemaker:${var.aws_region}:${data.aws_caller_identity.current.account_id}:*/*"
+        Resource = "arn:aws:sagemaker:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:*/*"
         Condition = {
           Null = {
             "sagemaker:OwnerUserProfileArn" = "true"
@@ -234,24 +209,24 @@ resource "aws_iam_role_policy_attachment" "sagemaker_full_access" {
 }
 
 resource "aws_iam_role_policy_attachment" "sagemaker_canvas_full_access" {
-  count = var.canvas_use ? 1 : 0
+  count      = var.canvas_use ? 1 : 0
   role       = aws_iam_role.sagemaker_domain_execution_role.name
   policy_arn = data.aws_iam_policy.AmazonSageMakerCanvasFullAccess[0].arn
 }
 
 resource "aws_iam_role_policy_attachment" "sagemaker_canvas_ai_services" {
-  count = var.canvas_use ? 1 : 0
+  count      = var.canvas_use ? 1 : 0
   role       = aws_iam_role.sagemaker_domain_execution_role.name
   policy_arn = data.aws_iam_policy.AmazonSageMakerCanvasAIServicesAccess[0].arn
 }
 
 resource "aws_iam_role_policy_attachment" "apps_management" {
-  role      = aws_iam_role.sagemaker_domain_execution_role.name
+  role       = aws_iam_role.sagemaker_domain_execution_role.name
   policy_arn = aws_iam_policy.app_management.arn
 }
 
 resource "aws_iam_role_policy_attachment" "spaces_management" {
-  role      = aws_iam_role.sagemaker_domain_execution_role.name
+  role       = aws_iam_role.sagemaker_domain_execution_role.name
   policy_arn = aws_iam_policy.space_management.arn
 }
 
@@ -264,27 +239,23 @@ resource "aws_iam_role_policy_attachment" "additional_sm_permissions" {
 # Data Scientist Role
 ######################################
 
-data "aws_iam_policy" "data_scientist" {
-  name = "DataScientist"
-}
-
 resource "aws_iam_role" "data_scientist" {
-  name  = "${var.application}-DataScientist"
+  name = "${var.application}-DataScientist"
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
       {
-        Action    = "sts:AssumeRole"
+        Action = "sts:AssumeRole"
         Principal = {
           Service = "sagemaker.amazonaws.com"
         }
-        Effect    = "Allow"
+        Effect = "Allow"
       }
     ]
-    })
+  })
 
-    tags = {
-      "Role" = "DataScientist"
+  tags = {
+    "Role" = "DataScientist"
   }
 }
 
@@ -302,33 +273,29 @@ resource "aws_iam_role_policy_attachment" "ds_app_management" {
 # ML Engineer Role
 ######################################
 
-data "aws_iam_policy" "ml_engineer" {
-  name = "PowerUserAccess"
-}
-
 resource "aws_iam_role" "ml_engineer" {
-  name  = "${var.application}-MLEngineer"
+  name = "${var.application}-MLEngineer"
 
   assume_role_policy = jsonencode({
-      Version = "2012-10-17"
-      Statement = [
-        {
-          Action    = "sts:AssumeRole"
-          Principal = {
-            Service = "sagemaker.amazonaws.com"
-          }
-          Effect    = "Allow"
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Principal = {
+          Service = "sagemaker.amazonaws.com"
         }
-      ]
-    })
+        Effect = "Allow"
+      }
+    ]
+  })
 
-    tags = {
-      "Role" = "MLEngineer"
-    }
+  tags = {
+    "Role" = "MLEngineer"
   }
+}
 
 resource "aws_iam_role_policy_attachment" "ml_engineer_role" {
-  role      = aws_iam_role.ml_engineer.name
+  role       = aws_iam_role.ml_engineer.name
   policy_arn = data.aws_iam_policy.ml_engineer.arn
 }
 
@@ -337,7 +304,7 @@ resource "aws_iam_role_policy_attachment" "ml_engineer_role" {
 ######################################
 
 resource "aws_iam_policy" "sagemaker_kms" {
-  count = var.kms_encryption ? 1 : 0
+  count       = var.kms_encryption ? 1 : 0
   name        = "sagemaker_kms_policy"
   path        = "/"
   description = "KMS policy for SageMaker"
@@ -360,7 +327,7 @@ resource "aws_iam_policy" "sagemaker_kms" {
 }
 
 resource "aws_iam_role_policy_attachment" "sagemaker_kms" {
-  count =  var.kms_encryption ? 1 : 0
+  count      = var.kms_encryption ? 1 : 0
   role       = aws_iam_role.sagemaker_domain_execution_role.name
   policy_arn = aws_iam_policy.sagemaker_kms[0].arn
 }
