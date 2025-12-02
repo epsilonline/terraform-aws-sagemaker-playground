@@ -22,6 +22,30 @@ resource "aws_sagemaker_domain" "sagemaker_domain" {
       }
     }
 
+    dynamic "jupyter_lab_app_settings" {
+      for_each = var.default_idle_timeout_in_minutes != null ? [1] : []
+      content {
+        app_lifecycle_management {
+          idle_settings {
+            lifecycle_management    = "ENABLED"
+            idle_timeout_in_minutes = var.default_idle_timeout_in_minutes
+          }
+        }
+      }
+    }
+
+    dynamic "code_editor_app_settings" {
+      for_each = var.default_idle_timeout_in_minutes != null ? [1] : []
+      content {
+        app_lifecycle_management {
+          idle_settings {
+            lifecycle_management    = "ENABLED"
+            idle_timeout_in_minutes = var.default_idle_timeout_in_minutes
+          }
+        }
+      }
+    }
+
     canvas_app_settings {
       time_series_forecasting_settings {
         status = "ENABLED"
@@ -101,6 +125,12 @@ resource "aws_sagemaker_space" "sagemaker_space" {
   ownership_settings {
     owner_user_profile_name = try(each.value.owner, null)
   }
+
+  depends_on = [
+    aws_sagemaker_user_profile.data_scientist,
+    aws_sagemaker_user_profile.ml_engineer
+  ]
+
   space_settings {
     app_type = each.value.app_type
     code_editor_app_settings {

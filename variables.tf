@@ -76,6 +76,12 @@ variable "sagemaker_image_arn_prefix" {
   description = "SageMaker Image Arn prefix"
 }
 
+variable "default_idle_timeout_in_minutes" {
+  type        = number
+  description = "Idle timeout in minutes for JupyterLab and CodeEditor apps. When set, enables app lifecycle management."
+  default     = 60
+}
+
 ######################################
 # SageMaker Profiles
 ######################################
