@@ -27,8 +27,9 @@ resource "aws_sagemaker_domain" "sagemaker_domain" {
       content {
         app_lifecycle_management {
           idle_settings {
-            lifecycle_management    = "ENABLED"
-            idle_timeout_in_minutes = var.default_idle_timeout_in_minutes
+            lifecycle_management        = "ENABLED"
+            idle_timeout_in_minutes     = var.default_idle_timeout_in_minutes
+            max_idle_timeout_in_minutes = var.default_idle_timeout_in_minutes
           }
         }
       }
@@ -39,8 +40,9 @@ resource "aws_sagemaker_domain" "sagemaker_domain" {
       content {
         app_lifecycle_management {
           idle_settings {
-            lifecycle_management    = "ENABLED"
-            idle_timeout_in_minutes = var.default_idle_timeout_in_minutes
+            lifecycle_management        = "ENABLED"
+            idle_timeout_in_minutes     = var.default_idle_timeout_in_minutes
+            max_idle_timeout_in_minutes = var.default_idle_timeout_in_minutes
           }
         }
       }
