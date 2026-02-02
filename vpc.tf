@@ -3,7 +3,7 @@
 ######################################
 
 module "vpc" {
-  count   = var.use_existing_vpc ? 0 : 1
+  count   = local.use_existing_vpc ? 0 : 1
   source  = "terraform-aws-modules/vpc/aws"
   version = "5.17.0"
 
@@ -33,7 +33,7 @@ module "vpc" {
 ######################################
 
 resource "aws_security_group" "sagemaker_existing_vpc" {
-  count       = var.use_existing_vpc && var.existing_security_group_id == "" ? 1 : 0
+  count       = local.use_existing_vpc && var.existing_security_group_id == "" ? 1 : 0
   name        = "${var.domain_name}-${var.environment}-sagemaker-sg"
   description = "Security group for SageMaker domain in existing VPC"
   vpc_id      = var.existing_vpc_id

@@ -30,7 +30,7 @@ resource "aws_sagemaker_domain" "sagemaker_domain" {
             lifecycle_management        = "ENABLED"
             idle_timeout_in_minutes     = var.default_idle_timeout_in_minutes
             max_idle_timeout_in_minutes = var.default_idle_timeout_in_minutes
-            min_idle_timeout_in_minutes     = var.default_idle_timeout_in_minutes
+            min_idle_timeout_in_minutes = var.default_idle_timeout_in_minutes
           }
         }
       }
@@ -44,7 +44,7 @@ resource "aws_sagemaker_domain" "sagemaker_domain" {
             lifecycle_management        = "ENABLED"
             idle_timeout_in_minutes     = var.default_idle_timeout_in_minutes
             max_idle_timeout_in_minutes = var.default_idle_timeout_in_minutes
-            min_idle_timeout_in_minutes     = var.default_idle_timeout_in_minutes
+            min_idle_timeout_in_minutes = var.default_idle_timeout_in_minutes
           }
         }
       }
@@ -99,6 +99,27 @@ resource "aws_sagemaker_user_profile" "data_scientist" {
   user_settings {
     execution_role  = aws_iam_role.data_scientist.arn
     security_groups = [local.security_group_id]
+
+    jupyter_lab_app_settings {
+      dynamic "app_lifecycle_management" {
+        for_each = var.default_idle_timeout_in_minutes != null ? [1] : []
+        content {
+          idle_settings {
+            lifecycle_management        = "ENABLED"
+            idle_timeout_in_minutes     = var.default_idle_timeout_in_minutes
+            max_idle_timeout_in_minutes = var.default_idle_timeout_in_minutes
+            min_idle_timeout_in_minutes = var.default_idle_timeout_in_minutes
+          }
+        }
+      }
+
+      dynamic "emr_settings" {
+        for_each = var.emr_s3_bucket_name != "" ? [1] : []
+        content {
+          execution_role_arns = [aws_iam_role.emr_serverless_s3_runtime[0].arn]
+        }
+      }
+    }
   }
 }
 

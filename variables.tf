@@ -137,21 +137,15 @@ variable "kms_arn" {
 # VPC
 ######################################
 
-variable "use_existing_vpc" {
-  type        = bool
-  description = "Set to true to use an existing VPC instead of creating a new one"
-  default     = false
-}
-
 variable "existing_vpc_id" {
   type        = string
-  description = "ID of existing VPC to use (required if use_existing_vpc is true)"
+  description = "ID of existing VPC to use. When provided, the module will use this VPC instead of creating a new one. Leave empty to create a new VPC."
   default     = ""
 }
 
 variable "existing_private_subnet_ids" {
   type        = list(string)
-  description = "List of existing private subnet IDs to use (at least one required if use_existing_vpc is true and subnets not auto-discovered)"
+  description = "List of existing private subnet IDs to use (at least one required when using existing VPC and subnets are not auto-discovered)"
   default     = []
 }
 
@@ -224,5 +218,21 @@ variable "one_ngw_per_az" {
 variable "enable_vpn_gateway" {
   type        = bool
   description = "Enables creation of VPN Gateway (only used when creating new VPC)"
+  default     = false
+}
+
+######################################
+# EMR Serverless
+######################################
+
+variable "emr_s3_bucket_name" {
+  type        = string
+  description = "S3 bucket name for EMR Serverless runtime access. If empty, EMR Serverless S3 access policy will not be created."
+  default     = ""
+}
+
+variable "eneable_emr_capabilities_policy" {
+  type        = bool
+  description = "Enables EMR admin permissions for DataScientist role"
   default     = false
 }

@@ -34,12 +34,12 @@ data "aws_availability_zones" "available" {
 ######################################
 
 data "aws_vpc" "existing" {
-  count = var.use_existing_vpc ? 1 : 0
+  count = local.use_existing_vpc ? 1 : 0
   id    = var.existing_vpc_id
 }
 
 data "aws_subnets" "existing_private" {
-  count = var.use_existing_vpc && length(var.existing_private_subnet_ids) == 0 ? 1 : 0
+  count = local.use_existing_vpc && length(var.existing_private_subnet_ids) == 0 ? 1 : 0
 
   filter {
     name   = "vpc-id"
@@ -48,12 +48,12 @@ data "aws_subnets" "existing_private" {
 }
 
 data "aws_subnet" "existing_private_details" {
-  count = var.use_existing_vpc ? length(var.existing_private_subnet_ids) : 0
+  count = local.use_existing_vpc ? length(var.existing_private_subnet_ids) : 0
   id    = var.existing_private_subnet_ids[count.index]
 }
 
 data "aws_security_group" "existing" {
-  count  = var.use_existing_vpc && var.existing_security_group_id != "" ? 1 : 0
+  count  = local.use_existing_vpc && var.existing_security_group_id != "" ? 1 : 0
   id     = var.existing_security_group_id
   vpc_id = var.existing_vpc_id
 }
@@ -106,32 +106,34 @@ locals {
   }
 
   ### VPC ###
-  vpc_name = "${var.domain_name}-${var.environment}-vpc"
+  # Derive use_existing_vpc from whether existing_vpc_id is provided
+  use_existing_vpc = var.existing_vpc_id != ""
+  vpc_name         = "${var.domain_name}-${var.environment}-vpc"
 
   # VPC references from vpc.tf
-  vpc_id = var.use_existing_vpc ? var.existing_vpc_id : module.vpc[0].vpc_id
+  vpc_id = local.use_existing_vpc ? var.existing_vpc_id : module.vpc[0].vpc_id
 
   # Determine private subnet IDs with validation
-  discovered_subnet_ids = var.use_existing_vpc && length(var.existing_private_subnet_ids) == 0 ? (
+  discovered_subnet_ids = local.use_existing_vpc && length(var.existing_private_subnet_ids) == 0 ? (
     try(data.aws_subnets.existing_private[0].ids, [])
   ) : []
 
-  private_subnet_ids = var.use_existing_vpc ? (
+  private_subnet_ids = local.use_existing_vpc ? (
     length(var.existing_private_subnet_ids) > 0 ? var.existing_private_subnet_ids : local.discovered_subnet_ids
   ) : module.vpc[0].private_subnets
 
-  security_group_id = var.use_existing_vpc ? (
+  security_group_id = local.use_existing_vpc ? (
     var.existing_security_group_id != "" ? var.existing_security_group_id : aws_security_group.sagemaker_existing_vpc[0].id
   ) : module.vpc[0].default_security_group_id
 
-  vpc_cidr = var.use_existing_vpc ? data.aws_vpc.existing[0].cidr_block : var.cidr_block
+  vpc_cidr = local.use_existing_vpc ? data.aws_vpc.existing[0].cidr_block : var.cidr_block
 
   # Validation flag
   has_valid_subnets = length(local.private_subnet_ids) > 0
 
   # Fail fast if existing VPC has no usable private subnets
-  _validate_existing_vpc_subnets = var.use_existing_vpc && !local.has_valid_subnets ? error(
-    "When use_existing_vpc is true, you must provide non-empty private subnets via existing_private_subnet_ids or ensure they are discoverable via data.aws_subnets.existing_private."
+  _validate_existing_vpc_subnets = local.use_existing_vpc && !local.has_valid_subnets ? error(
+    "When using an existing VPC (existing_vpc_id is set), you must provide non-empty private subnets via existing_private_subnet_ids or ensure they are discoverable via data.aws_subnets.existing_private."
   ) : true
 
   ### SageMaker Domain ###
