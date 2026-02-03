@@ -34,14 +34,14 @@ module "vpc" {
 
 resource "aws_security_group" "sagemaker_existing_vpc" {
   count       = local.use_existing_vpc && var.existing_security_group_id == "" ? 1 : 0
-  name        = "${var.domain_name}-${var.environment}-sagemaker-sg"
+  name        = local.sagemaker_sg_name
   description = "Security group for SageMaker domain in existing VPC"
   vpc_id      = var.existing_vpc_id
 
   tags = merge(
     local.common_tags,
     {
-      Name = "${var.domain_name}-${var.environment}-sagemaker-sg"
+      Name = local.sagemaker_sg_name
     }
   )
 }

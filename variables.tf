@@ -155,6 +155,12 @@ variable "existing_security_group_id" {
   default     = ""
 }
 
+variable "sagemaker_sg_name" {
+  type        = string
+  description = "If defined, provides a custom name for SageMaker security group"
+  default     = ""
+}
+
 variable "create_security_group_rules" {
   type        = bool
   description = "Set to false if using an existing security group with pre-configured rules"

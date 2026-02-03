@@ -122,9 +122,12 @@ locals {
     length(var.existing_private_subnet_ids) > 0 ? var.existing_private_subnet_ids : local.discovered_subnet_ids
   ) : module.vpc[0].private_subnets
 
+  # SG
   security_group_id = local.use_existing_vpc ? (
     var.existing_security_group_id != "" ? var.existing_security_group_id : aws_security_group.sagemaker_existing_vpc[0].id
   ) : module.vpc[0].default_security_group_id
+
+  sagemaker_sg_name = coalesce(var.sagemaker_sg_name, "${var.domain_name}-${var.environment}-sagemaker-sg")
 
   vpc_cidr = local.use_existing_vpc ? data.aws_vpc.existing[0].cidr_block : var.cidr_block
 
