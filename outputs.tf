@@ -7,6 +7,11 @@ output "default_execution_role" {
   description = "The execution role used for SageMaker Domain"
 }
 
+output "default_execution_role_arn" {
+  value       = aws_iam_role.sagemaker_domain_execution_role.arn
+  description = "ARN of the execution role used for SageMaker Domain"
+}
+
 ######################################
 # SageMaker Domain
 ######################################
