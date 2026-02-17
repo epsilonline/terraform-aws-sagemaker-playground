@@ -151,34 +151,49 @@ resource "aws_sagemaker_space" "sagemaker_space" {
     owner_user_profile_name = try(each.value.owner, null)
   }
 
+  space_settings {
+    app_type = each.value.app_type
+    
+    dynamic "jupyter_lab_app_settings" {
+      for_each = each.value.app_type == "JupyterLab" ? [1] : []
+      content {
+        dynamic "app_lifecycle_management" {
+          for_each = each.value.idle_timeout_in_minutes != null ? [1] : []
+          content {
+            idle_settings {
+              idle_timeout_in_minutes = each.value.idle_timeout_in_minutes
+            }
+          }
+        }
+        default_resource_spec {
+          instance_type = each.value.instance_type
+        }
+      }
+    }
+
+    dynamic "code_editor_app_settings" {
+      for_each = each.value.app_type == "CodeEditor" ? [1] : []
+      content {
+        dynamic "app_lifecycle_management" {
+          for_each = each.value.idle_timeout_in_minutes != null ? [1] : []
+          content {
+            idle_settings {
+              idle_timeout_in_minutes = each.value.idle_timeout_in_minutes
+            }
+          }
+        }
+        default_resource_spec {
+          instance_type = each.value.instance_type
+        }
+      }
+    }
+  }
+
   depends_on = [
     aws_sagemaker_user_profile.data_scientist,
     aws_sagemaker_user_profile.ml_engineer
   ]
 
-  space_settings {
-    app_type = each.value.app_type
-    code_editor_app_settings {
-      app_lifecycle_management {
-        idle_settings {
-          idle_timeout_in_minutes = each.value.idle_timeout_in_minutes
-        }
-      }
-      default_resource_spec {
-        instance_type = each.value.instance_type
-      }
-    }
-    jupyter_lab_app_settings {
-      app_lifecycle_management {
-        idle_settings {
-          idle_timeout_in_minutes = each.value.idle_timeout_in_minutes
-        }
-      }
-      default_resource_spec {
-        instance_type = each.value.instance_type
-      }
-    }
-  }
 }
 
 resource "aws_sagemaker_app" "sm_app" {
@@ -194,6 +209,13 @@ resource "aws_sagemaker_app" "sm_app" {
   }
 
   depends_on = [aws_sagemaker_space.sagemaker_space]
+  lifecycle {
+    ignore_changes = [
+      # Ignores changes caused by app getting stopped from console
+      resource_spec[0].sagemaker_image_arn,
+      resource_spec[0].sagemaker_image_version_alias
+    ]
+  }
 }
 
 ######################################
